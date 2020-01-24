@@ -915,32 +915,37 @@ class Common_functions  {
 	 * @return mixed
 	 */
 	public function createURL () {
-		// SSL on standard port
-		if(($_SERVER['HTTPS'] == 'on') || ($_SERVER['SERVER_PORT'] == 443)) {
-			$url = "https://".$_SERVER['HTTP_HOST'];
+		// Select protocol
+		if(($_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) {
+			$proto = "https";
 		}
-		// reverse proxy doing SSL offloading
-		elseif(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
-			if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-				$url = "https://".$_SERVER['HTTP_X_FORWARDED_HOST'];
-			}
-			else {
-				$url = "https://".$_SERVER['HTTP_HOST'];
-			}
-		}
-		elseif(isset($_SERVER['HTTP_X_SECURE_REQUEST'])  && $_SERVER['HTTP_X_SECURE_REQUEST'] == 'true') {
-			$url = "https://".$_SERVER['SERVER_NAME'];
-		}
-		// custom port
-		elseif($_SERVER['SERVER_PORT']!="80" && (isset($_SERVER['HTTP_X_FORWARDED_PORT']) && $_SERVER['HTTP_X_FORWARDED_PORT']!="80")) {
-			$url = "http://".$_SERVER['SERVER_NAME'].":".$_SERVER['SERVER_PORT'];
-		}
-		// normal http
 		else {
-			$url = "http://".$_SERVER['HTTP_HOST'];
+			$proto = "http";
 		}
 
-		//result
+		// Select host and port
+		$authority_port = "";
+		if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+			$authority_host = $_SERVER['HTTP_X_FORWARDED_HOST'];
+			if(isset($_SERVER['HTTP_X_FORWARDED_PORT'])) {
+				// check if it's in a custom port
+				if (($_SERVER['HTTP_X_FORWARDED_PORT']!="80") && $proto == "http") {
+					$authority_port = ":".$_SERVER['HTTP_X_FORWARDED_PORT'];
+				}
+				elseif (($_SERVER['HTTP_X_FORWARDED_PORT']!="443") && $proto == "https") {
+					$authority_port = ":".$_SERVER['HTTP_X_FORWARDED_PORT'];
+				}
+			}
+		}
+		else {
+			$authority_host = $_SERVER['HTTP_HOST'];
+			// it there is a custom port, it's part of the Host request header
+		}
+
+		// Glue all together
+		$url = $proto."://".$authority_host.$authority_port;
+
+		// return
 		return $url;
 	}
 
