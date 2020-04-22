@@ -1,7 +1,7 @@
 <?php
 
-# Check we have been included via subnet-scan-excute.php and not called directly
-require("subnet-scan-check-included.php");
+# Check we have been included and not called directly
+require( dirname(__FILE__) . '/../../../functions/include-only.php' );
 
 /*
  * Discover new hosts with snmp
@@ -159,18 +159,17 @@ foreach ($found_mac as $mac) {
 }
 
 // remove duplicates
-foreach ($found as $k1=>$f) {
-    foreach ($found as $k2=>$f1) {
-        if ($k1!=$k2) {
-            if ($f['mac']==$f1['mac'] && $f['device']==$f1['device']) {
-                unset($found[$k1]);
-            }
-        }
-    }
+$mac_lookup = [];
 
-    // remove Port-channel
-    if(strpos(strtolower($f['port']), "port-channel")!==false) {
-        unset($found[$k1]);
+foreach ($found as $k=>$f) {
+    $dev = $f['device'];
+    $mac = $f['mac'];
+
+    // remove duplicate macs on same device & Port-channels
+    if(isset($mac_lookup[$dev][$mac]) || stripos($f['port'], "port-channel")!==false) {
+        unset($found[$k]);
+    } else {
+        $mac_lookup[$dev][$mac] = 1;
     }
 }
 
@@ -218,7 +217,7 @@ else {
 
 
 	//form
-	print "<form name='scan-snmp-mac-form' class='scan-snmp-mac-form'>";
+	print "<form name='snmp-mac-form' class='snmp-mac-form'>";
 	print "<table class='table table-striped table-top table-condensed'>";
 
 	// titles
@@ -365,7 +364,7 @@ else {
 	print "<tr>";
 	print "	<td colspan='$colspan'>";
 	print "<div id='subnetScanAddResult'></div>";
-	print "		<a href='' class='btn btn-sm btn-success pull-right' id='saveScanResults' data-script='scan-snmp-mac' data-subnetId='".$_POST['subnetId']."'><i class='fa fa-plus'></i> "._("Add discovered hosts")."</a>";
+	print "		<a href='' class='btn btn-sm btn-success pull-right' id='saveScanResults' data-script='snmp-mac' data-subnetId='".$_POST['subnetId']."'><i class='fa fa-plus'></i> "._("Add discovered hosts")."</a>";
 	print "	</td>";
 	print "</tr>";
 

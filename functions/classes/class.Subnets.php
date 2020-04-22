@@ -1474,17 +1474,14 @@ class Subnets extends Common_functions {
 	public function has_network_broadcast($subnet) {
 		$subnet = (object) $subnet;
 
-		# Address/NAT pools
-		if ($subnet->isPool)
-			return false;
-
-		# IPv4/IPv6 networks
 		$type = $this->identify_address($subnet->subnet);
 
-		if (($type == 'IPv4' && $subnet->mask<31) || ($type == 'IPv6' && $subnet->mask<127))
-			return true;
-		else
+		# Address/NAT pools & IPv6
+		if ($subnet->isPool || $type == 'IPv6')
 			return false;
+
+		# IPv4, handle /32 & /31
+		return ($subnet->mask<31) ? true : false;
 	}
 
 	/**
@@ -1730,7 +1727,7 @@ class Subnets extends Common_functions {
 
 		$type = ($subnet->subnet <= 4294967295) ? 'IPv4' : 'IPv6';
 
-		if (($type=="IPv4" && $subnet->mask>=31) || ($type=="IPv6" && $subnet->mask>=127))
+		if (($type=="IPv4" && $subnet->mask>=31) || $type=="IPv6")
 			return false;
 
 		$network   = $this->decimal_network_address($subnet->subnet, $subnet->mask);
@@ -1917,7 +1914,7 @@ class Subnets extends Common_functions {
 
 			while (gmp_cmp($candidate_start, $range['start']) >= 0) {
 				if ($count > 0 && ++$discovered > $count) {
-					return array (subnets => $subnets, truncated => true);
+					return array ('subnets' => $subnets, 'truncated' => true);
 				}
 				$subnets[] = $this->transform_to_dotted(gmp_strval($candidate_start)) . '/' . $mask;
 
@@ -3128,7 +3125,7 @@ class Subnets extends Common_functions {
 			if($item['domainId']!=1) {
     			$domain = $this->fetch_object("vlanDomains", "id", $item['domainId']);
     			if ($domain!==false) {
-        			$item['l2domain'] = " <span class='badge badge1 badge5' rel='tooltip' title='VLAN is in domain $domain->name'>$domain->name</span>";
+        			$item['l2domain'] = " <span class='badge badge1 badge5' rel='tooltip' title='"._('VLAN is in domain')." $domain->name'>$domain->name</span>";
     			}
 			}
 
