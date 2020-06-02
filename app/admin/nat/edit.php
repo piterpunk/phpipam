@@ -139,17 +139,17 @@ $custom = $Tools->fetch_custom_fields('nat');
                 ?>
             </td>
             <td>
-                <span class="text-muted"><?php print _("Use destination policy NAT"); ?></span>
+                <span class="text-muted"><?php print _("Create policy NAT"); ?></span>
             </td>
         </tr>
 
         <tr class='port'>
-            <th><?php print _('Destination address'); ?></th>
+            <th><?php print $nat->type=="source" ? _('Destination address') : _('Source address'); ?></th>
             <td>
                 <input type="text" class="form-control input-sm" name="policy_dst" value="<?php print $nat->policy_dst; ?>" placeholder='<?php print _('IP'); ?>' <?php print $readonly; ?>>
             </td>
             <td>
-                <span class="text-muted"><?php print _("Destination address for policy NAT"); ?></span>
+                <span class="text-muted"><?php print $nat->type=="source" ? _('Destination') : _('Source'); print _(" address for policy NAT"); ?></span>
             </td>
         </tr>
 
@@ -157,7 +157,7 @@ $custom = $Tools->fetch_custom_fields('nat');
         	<td colspan="3"><hr></td>
     	</tr>
     	<tr>
-        	<th><?php print _('Source objects'); ?></th>
+        	<th><?php print $nat->type=="destination" ? _('Destination objects') : _('Source objects'); ?></th>
         	<td class='nat-src'>
             	<?php
                 // print sources
@@ -194,7 +194,7 @@ $custom = $Tools->fetch_custom_fields('nat');
         	<td colspan="3"><hr></td>
     	</tr>
     	<tr>
-        	<th><?php print _('Destination objects'); ?></th>
+            <th><?php print _('Translated objects'); ?></th>
         	<td class='nat-dst'>
             	<?php
                 // print sources
